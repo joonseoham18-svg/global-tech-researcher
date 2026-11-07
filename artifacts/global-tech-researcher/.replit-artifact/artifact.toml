@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "글로벌 테크 리서처"
+description = "해외 기술 글을 한국어 핵심 요약, 용어 풀이, 인사이트 카드로 정리하는 리서치 도구입니다."
+version = "1.0.0"
+id = "artifacts/global-tech-researcher"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20575
+
+[services.development]
+run = "pnpm --filter @workspace/global-tech-researcher run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/global-tech-researcher", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/global-tech-researcher/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20575"
+BASE_PATH = "/"

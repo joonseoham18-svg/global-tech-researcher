@@ -1,0 +1,143 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: research
+    description: Free text research and extraction
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /research/analyze:
+    post:
+      operationId: analyzeResearch
+      tags: [research]
+      summary: Analyze a technology article or text
+      description: Extracts article text with Jina Reader when given a URL and analyzes it with local text-processing rules.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResearchInput"
+      responses:
+        "200":
+          description: Research analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResearchResult"
+        "400":
+          description: Invalid input or unsupported URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Jina Reader could not retrieve the page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    ResearchInput:
+      type: object
+      properties:
+        source:
+          type: string
+          minLength: 1
+          maxLength: 200000
+      required:
+        - source
+    ResearchSummaryLine:
+      type: object
+      properties:
+        label:
+          type: string
+        koreanSummary:
+          type: string
+        originalSentence:
+          type: string
+      required:
+        - label
+        - koreanSummary
+        - originalSentence
+    ResearchTerm:
+      type: object
+      properties:
+        term:
+          type: string
+        meaning:
+          type: string
+      required:
+        - term
+        - meaning
+    ResearchResult:
+      type: object
+      properties:
+        title:
+          type: string
+        sourceUrl:
+          type: ["string", "null"]
+        sourceType:
+          type: string
+          enum: [url, text]
+        summary:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResearchSummaryLine"
+        keywords:
+          type: array
+          items:
+            type: string
+        terms:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResearchTerm"
+        insight:
+          type: string
+        characterCount:
+          type: integer
+      required:
+        - title
+        - sourceUrl
+        - sourceType
+        - summary
+        - keywords
+        - terms
+        - insight
+        - characterCount
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
