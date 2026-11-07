@@ -417,7 +417,10 @@ export function extractArticle(text: string): { title: string; content: string }
   const content = text
     .replace(/^Title:.*$/gim, "")
     .replace(/^URL Source:.*$/gim, "")
+    .replace(/^Published Time:.*$/gim, "")
+    .replace(/^Final URL:.*$/gim, "")
     .replace(/^Markdown Content:.*$/gim, "")
+    .replace(/!\[Image \d+\]\([^)]*\)/g, "")
     .replace(/^#\s+.+$/gm, "")
     .replace(/\r/g, "")
     .replace(/\n{3,}/g, "\n\n")
