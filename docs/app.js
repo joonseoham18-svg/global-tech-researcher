@@ -62,7 +62,11 @@
     'company', 'companies', 'developer', 'developers', 'researcher', 'researchers',
     'people', 'computer', 'computers', 'machine', 'machines', 'learning',
     'artificial', 'intelligence', 'large', 'various', 'types', 'task', 'tasks',
-    'make', 'made', 'help', 'based', 'first', 'well', 'work', 'works'];
+    'make', 'made', 'help', 'based', 'first', 'well', 'work', 'works',
+    'said', 'says', 'told', 'ago', 'like', 'even', 'many', 'one', 'two', 'three',
+    'next', 'now', 'back', 'still', 'get', 'got', 'way', 'ways', 'time', 'times',
+    'year', 'years', 'day', 'days', 'week', 'weeks', 'month', 'months', 'today',
+    'according', 'including', 'which'];
   var stopWordSet = new Set(stopWords);
 
   var summaryLabels = ['배경', '핵심 내용', '의미와 영향'];
@@ -88,6 +92,14 @@
       .filter(function (word) { return word.length > 2 && !stopWordSet.has(word); });
   }
 
+  // Jina Reader가 함께 물고 오는 사이트 안내 문구(구독·로그인·목록 안내)를 걸러 냅니다.
+  var boilerplatePattern = /(daily email digest|homepage feed|newsletter|create a free account|all rights reserved|cookie (settings|policy)|advertisement|skip to (main )?content|share this (article|story)|this topic will be added|we use cookies|cookies and similar|\bcookies?\b)/i;
+  var boilerplateStart = /^(follow|see all|share|subscribe|sign in|log in|menu|advertisement|skip to|read more|listen|comment)/i;
+
+  function isBoilerplate(sentence) {
+    return boilerplatePattern.test(sentence) || boilerplateStart.test(sentence.trim());
+  }
+
   function splitSentences(text) {
     var cleaned = text
       .replace(/```[\s\S]*?```/g, ' ')
@@ -101,16 +113,17 @@
     var fromPunctuation = cleaned
       .split(/(?<=[.!?])\s+(?=[A-Z0-9"'(])/)
       .map(function (sentence) { return sentence.trim(); })
-      .filter(function (sentence) { return tokenize(sentence).length >= 5; });
+      .filter(function (sentence) { return tokenize(sentence).length >= 5 && !isBoilerplate(sentence); });
 
     if (fromPunctuation.length >= 3) return fromPunctuation;
 
     var paragraphs = cleaned
       .split(/(?<=[.!?])\s+|(?<=;)\s+|(?<=:)\s+/)
       .map(function (sentence) { return sentence.trim(); })
-      .filter(function (sentence) { return tokenize(sentence).length >= 4; });
+      .filter(function (sentence) { return tokenize(sentence).length >= 4 && !isBoilerplate(sentence); });
 
-    return paragraphs.length ? paragraphs : (cleaned ? [cleaned] : []);
+    if (paragraphs.length) return paragraphs;
+    return fromPunctuation.length ? fromPunctuation : (cleaned ? [cleaned] : []);
   }
 
   function getKeywords(sentences) {
@@ -208,9 +221,17 @@
       .map(function (entry) { return entry.sentence.slice(0, 420); });
   }
 
+  function koreanNameOf(keyword) {
+    if (!keyword) return '';
+    var found = glossary.filter(function (item) {
+      return item.term.toLowerCase() === String(keyword).toLowerCase();
+    })[0];
+    return found ? found.koreanName : keyword;
+  }
+
   function koreanSummaryFor(sentence, keywords, terms) {
-    var topic = (terms[0] && terms[0].koreanName) || keywords[0] || '이 기술';
-    var secondary = (terms[1] && terms[1].koreanName) || keywords[1] || '관련 기술';
+    var topic = (terms[0] && terms[0].koreanName) || koreanNameOf(keywords[0]) || '이 기술';
+    var secondary = (terms[1] && terms[1].koreanName) || koreanNameOf(keywords[1]) || '관련 기술';
     var lower = sentence.toLowerCase();
 
     if (/\bbenchmark(s)?\b/.test(lower) &&
@@ -237,19 +258,29 @@
       /\b(data|patterns?|learn|learning|predict)\b/.test(lower)) {
       return '머신러닝은 데이터의 패턴을 학습해 예측이나 판단에 활용하는 접근입니다.';
     }
-    if (/\b(launch|launched|release|released|introduce|introduced|announce|announced|unveil|unveiled)\b/.test(lower)) {
+    if (/\b(launch|releas|introduc|announc|unveil)/.test(lower)) {
       return topic + ' 관련 신제품·기술 공개 소식과 주요 특징을 다룹니다.';
     }
     if (/\b(risk|risks|challenge|challenges|cost|costs|privacy|security|concern|concerns)\b/.test(lower)) {
       return topic + ' 적용 시의 비용·보안·운영 과제를 함께 살펴볼 필요가 있습니다.';
     }
-    if (/\b(improve|improved|increase|increased|reduce|reduced|faster|performance|efficient|efficiency)\b/.test(lower)) {
+    if (/\b(improv|increas|reduc|faster|performance|efficienc|speed)/.test(lower)) {
       return topic + '의 성능이나 효율 변화가 주요 내용이며, ' + secondary + '와 함께 언급됩니다.';
     }
     if (/\b(enable|enables|allow|allows|potential|possible|impact)\b/.test(lower)) {
       return topic + ' 관련 기술이 어떤 활용을 가능하게 하는지 설명합니다.';
     }
-    return topic + ' 관련 내용입니다. 구체적인 주장과 조건은 인용된 원문에서 확인해 주세요.';
+    var percents = sentence.match(/\b\d+(?:\.\d+)?\s?(?:%|percent)\b/gi);
+    if (percents && percents.length >= 2) {
+      return topic + ' 관련 수치가 ' + percents[0] + '에서 ' + percents[1] + '로 달라졌다고 전합니다.';
+    }
+    if (/\b(available|availability|rolling out|will roll out|starting (today|next week|this week)|general availability)\b/.test(lower)) {
+      return '누가 언제부터 쓸 수 있는지(출시·제공 범위)를 설명하는 대목입니다.';
+    }
+    if (/\b(researchers|study|studies|survey|found that|shows that|according to)\b/.test(lower)) {
+      return '연구·조사에서 확인된 결과를 근거로 제시합니다.';
+    }
+    return topic + '에 대한 설명이 이어지는 대목입니다. 구체적인 주장과 조건은 인용된 원문에서 확인해 주세요.';
   }
 
   function analyzeText(text, options) {
@@ -289,13 +320,35 @@
     };
   }
 
+  // 기사 끝에 붙는 쿠키 동의·회사 약관·저작권 블록은 요약 대상에서 잘라 냅니다.
+  var footerMarkers = [
+    'When you visit our website, we store cookies',
+    'Strictly Necessary Cookies',
+    'This website is now part of',
+    'All rights reserved',
+    'Terms of Use',
+    'Privacy Policy'
+  ];
+
+  function cutFooterBlock(text) {
+    var cutAt = -1;
+    footerMarkers.forEach(function (marker) {
+      var index = text.indexOf(marker);
+      if (index !== -1 && index > text.length * 0.25 && (cutAt === -1 || index < cutAt)) {
+        cutAt = index;
+      }
+    });
+    return cutAt === -1 ? text : text.slice(0, cutAt);
+  }
+
   function extractArticle(text) {
     var titleMatch = text.match(/^Title:\s*(.+)$/im);
     var headingMatch = text.match(/^#\s+(.+)$/m);
     var title = (titleMatch && titleMatch[1] && titleMatch[1].trim()) ||
       (headingMatch && headingMatch[1] && headingMatch[1].trim()) ||
       '입력한 영문 텍스트';
-    var content = text
+    var trimmed = cutFooterBlock(text);
+    var content = trimmed
       .replace(/^Title:.*$/gim, '')
       .replace(/^URL Source:.*$/gim, '')
       .replace(/^Published Time:.*$/gim, '')
