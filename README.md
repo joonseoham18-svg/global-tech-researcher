@@ -3,8 +3,9 @@
 해외 기술 블로그·영문 아티클을 넣으면 **한국어 3줄 요약 + 핵심 IT/AI 용어 해설 카드**로 바꿔 주는 리서치 데스크입니다.
 결과는 버튼 한 번으로 **노션에 바로 붙여넣을 수 있는 Markdown**으로 복사됩니다.
 
-- 🚀 **라이브 데모**: https://3d40a360-d620-4bab-802c-832c1684a39c-00-a509i7s36p1y.pike.replit.dev/
+- 🚀 **라이브 데모**: https://joonseoham18-svg.github.io/global-tech-researcher/  (GitHub Pages · 설치 없이 브라우저에서 바로 실행)
 - 💻 **저장소**: https://github.com/joonseoham18-svg/global-tech-researcher
+- 🧪 **원본 Replit 프로젝트**: https://replit.com/@joonseoham/geulrobeol-tekeu-riseoceo (Replit 개발 프리뷰는 로그인·실행 상태가 필요해 공유용 주소로는 쓰지 않습니다)
 
 ![글로벌 테크 리서처 화면](docs/preview.png)
 
@@ -51,6 +52,14 @@ scripts/                    # 워크스페이스 유틸 스크립트
 2. 서버는 입력이 URL이면 `r.jina.ai`로 본문을 읽고, 아니면 입력 텍스트를 그대로 사용합니다.
 3. `research-analysis.ts` 가 문장을 쪼개 중요도를 매기고, 용어 사전과 매칭해 결과를 만듭니다.
 4. 프론트엔드는 요약·키워드·용어·인사이트를 카드로 그리고, Markdown 복사 버튼을 제공합니다.
+
+## 정적 배포 (docs/)
+
+`docs/` 폴더는 서버 없이 브라우저에서 도는 버전입니다. GitHub Pages(main 브랜치 `/docs`)로 서비스됩니다.
+
+- 본문 추출: 브라우저에서 `r.jina.ai`를 직접 호출 (CORS 허용)
+- 요약·용어 해설: `artifacts/api-server/src/lib/research-analysis.ts`와 같은 규칙을 `docs/app.js`에 옮겨 브라우저에서 계산
+- 잠금: `docs/app.js`의 `REQUIRE_PIN`(기본 `false`)을 `true`로 바꾸면 PIN(`1004`) 화면이 켜집니다
 
 ## 로컬에서 실행
 
