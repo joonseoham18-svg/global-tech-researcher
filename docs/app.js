@@ -107,6 +107,22 @@
     return false;
   }
 
+  // 예전 Safari(16.4 미만)는 lookbehind 정규식을 지원하지 않으므로, 없으면 다른 방식으로 나눕니다.
+  var lookbehindOk = (function () {
+    try { new RegExp('(?<=[.!?])\\s+'); return true; } catch (error) { return false; }
+  })();
+
+  var NEXT_CAPITAL = "A-Z0-9\"('";
+
+  function splitAfterPunctuation(text, terminators, requireCapital) {
+    if (lookbehindOk) {
+      var pattern = '(?<=[' + terminators + '])\\s+' + (requireCapital ? '(?=[' + NEXT_CAPITAL + '])' : '');
+      return text.split(new RegExp(pattern));
+    }
+    var fallbackPattern = '([' + terminators + '])\\s+' + (requireCapital ? '(?=[' + NEXT_CAPITAL + '])' : '');
+    return text.replace(new RegExp(fallbackPattern, 'g'), '$1\u0001').split('\u0001');
+  }
+
   function splitSentences(text) {
     var cleaned = text
       .replace(/```[\s\S]*?```/g, ' ')
@@ -117,15 +133,13 @@
       .replace(/\s+/g, ' ')
       .trim();
 
-    var fromPunctuation = cleaned
-      .split(/(?<=[.!?])\s+(?=[A-Z0-9"'(])/)
+    var fromPunctuation = splitAfterPunctuation(cleaned, '.!?', true)
       .map(function (sentence) { return sentence.trim(); })
       .filter(function (sentence) { return tokenize(sentence).length >= 5 && !isBoilerplate(sentence); });
 
     if (fromPunctuation.length >= 3) return fromPunctuation;
 
-    var paragraphs = cleaned
-      .split(/(?<=[.!?])\s+|(?<=;)\s+|(?<=:)\s+/)
+    var paragraphs = splitAfterPunctuation(cleaned, '.!?;:', false)
       .map(function (sentence) { return sentence.trim(); })
       .filter(function (sentence) { return tokenize(sentence).length >= 4 && !isBoilerplate(sentence); });
 
