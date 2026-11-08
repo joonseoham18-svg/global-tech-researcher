@@ -672,7 +672,9 @@
 
   function unlock() {
     el.pinScreen.hidden = true;
+    el.pinScreen.style.display = 'none';
     el.page.hidden = false;
+    el.page.style.display = 'flex';
     updateComposer();
   }
 
@@ -683,7 +685,9 @@
       return;
     }
     el.page.hidden = true;
+    el.page.style.display = 'none';
     el.pinScreen.hidden = false;
+    el.pinScreen.style.display = 'grid';
     el.pinInput.focus();
   }
 
