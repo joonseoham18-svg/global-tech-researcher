@@ -93,7 +93,7 @@
   }
 
   // Jina Reader가 함께 물고 오는 사이트 안내 문구(구독·로그인·목록 안내)를 걸러 냅니다.
-  var boilerplatePattern = /(daily email digest|homepage feed|newsletter|create a free account|all rights reserved|cookie (settings|policy)|advertisement|skip to (main )?content|share this (article|story)|this topic will be added|we use cookies|cookies and similar|\bcookies?\b|community guidelines|ethics statement|contact tip us|how we rate and review|do not sell or share my personal data)/i;
+  var boilerplatePattern = /(daily email digest|homepage feed|newsletter|create a free account|all rights reserved|cookie (settings|policy)|advertisement|skip to (main )?content|share this (article|story)|this topic will be added|we use cookies|cookies and similar|\bcookies?\b|community guidelines|ethics statement|contact tip us|how we rate and review|do not sell or share my personal data|image credits?)/i;
   var boilerplateStart = /^(follow|see all|share|subscribe|sign in|log in|menu|advertisement|skip to|read more|listen|comment)/i;
 
   function isBoilerplate(sentence) {
@@ -392,7 +392,7 @@
       .replace(/^Markdown Content:.*$/gim, '')
       .replace(/!\[Image \d+\]\([^)]*\)/g, '')
       .replace(/!Image \d+:?/g, '')
-      .replace(/^Image Credits?:.*$/gim, '')
+      .replace(/^.*Image Credits?:.*$/gim, '')
       .replace(/\[\s*\]\([^)]*\)/g, ' ')
       .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
       .replace(/^#\s+.+$/gm, '')
