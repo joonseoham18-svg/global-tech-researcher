@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+/* hidden 속성이 display 규칙에 덮이지 않도록 */
+[hidden] { display: none !important; }
+
 /* 글로벌 테크 리서처 — 정적(GitHub Pages) 배포용 스타일 */
 
 :root {
