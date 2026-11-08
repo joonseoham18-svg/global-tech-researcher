@@ -93,11 +93,18 @@
   }
 
   // Jina Reader가 함께 물고 오는 사이트 안내 문구(구독·로그인·목록 안내)를 걸러 냅니다.
-  var boilerplatePattern = /(daily email digest|homepage feed|newsletter|create a free account|all rights reserved|cookie (settings|policy)|advertisement|skip to (main )?content|share this (article|story)|this topic will be added|we use cookies|cookies and similar|\bcookies?\b)/i;
+  var boilerplatePattern = /(daily email digest|homepage feed|newsletter|create a free account|all rights reserved|cookie (settings|policy)|advertisement|skip to (main )?content|share this (article|story)|this topic will be added|we use cookies|cookies and similar|\bcookies?\b|community guidelines|ethics statement|contact tip us|how we rate and review|do not sell or share my personal data)/i;
   var boilerplateStart = /^(follow|see all|share|subscribe|sign in|log in|menu|advertisement|skip to|read more|listen|comment)/i;
 
   function isBoilerplate(sentence) {
-    return boilerplatePattern.test(sentence) || boilerplateStart.test(sentence.trim());
+    if (boilerplatePattern.test(sentence) || boilerplateStart.test(sentence.trim())) return true;
+    // 메뉴·링크 목록은 대부분 단어가 대문자로 시작합니다. 그런 줄은 본문 문장이 아닙니다.
+    var words = sentence.trim().split(/\s+/).filter(Boolean);
+    if (words.length >= 6) {
+      var lowercaseWords = words.filter(function (word) { return /^[a-z]/.test(word); }).length;
+      if (lowercaseWords / words.length < 0.25) return true;
+    }
+    return false;
   }
 
   function splitSentences(text) {
@@ -341,13 +348,28 @@
     return cutAt === -1 ? text : text.slice(0, cutAt);
   }
 
+  // 링크만 늘어선 메뉴 줄(예: Contact / Tip Us / Archives …)은 본문이 아니므로 버립니다.
+  function dropNavigationLines(text) {
+    return text.split('\n').filter(function (line) {
+      var linkCount = (line.match(/\]\(/g) || []).length;
+      if (!linkCount) return true;
+      var cleaned = line
+        .replace(/\[\s*\]\([^)]*\)/g, ' ')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+      var words = cleaned.trim().split(/\s+/).filter(Boolean).length;
+      return !(linkCount >= 4 && words < 12);
+    }).join('\n');
+  }
+
+  var errorTitlePattern = /^(4\d\d|5\d\d)\b|\b(not found|forbidden|access denied|are you a robot|just a moment|attention required|captcha)\b/i;
+
   function extractArticle(text) {
     var titleMatch = text.match(/^Title:\s*(.+)$/im);
     var headingMatch = text.match(/^#\s+(.+)$/m);
     var title = (titleMatch && titleMatch[1] && titleMatch[1].trim()) ||
       (headingMatch && headingMatch[1] && headingMatch[1].trim()) ||
       '입력한 영문 텍스트';
-    var trimmed = cutFooterBlock(text);
+    var trimmed = dropNavigationLines(cutFooterBlock(text));
     var content = trimmed
       .replace(/^Title:.*$/gim, '')
       .replace(/^URL Source:.*$/gim, '')
@@ -355,6 +377,10 @@
       .replace(/^Final URL:.*$/gim, '')
       .replace(/^Markdown Content:.*$/gim, '')
       .replace(/!\[Image \d+\]\([^)]*\)/g, '')
+      .replace(/!Image \d+:?/g, '')
+      .replace(/^Image Credits?:.*$/gim, '')
+      .replace(/\[\s*\]\([^)]*\)/g, ' ')
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
       .replace(/^#\s+.+$/gm, '')
       .replace(/\r/g, '')
       .replace(/\n{3,}/g, '\n\n')
@@ -423,7 +449,10 @@
   async function getArticleText(url) {
     var readerText = await jinaFetch(url);
     var article = extractArticle(readerText);
-    if (article.content.length < 40) {
+    if (errorTitlePattern.test(article.title)) {
+      throw new Error('Jina Reader returned an error page');
+    }
+    if (article.content.length < 400) {
       throw new Error('Jina Reader returned too little article text');
     }
     return article;
