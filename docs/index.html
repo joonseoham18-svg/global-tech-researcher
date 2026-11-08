@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>글로벌 테크 리서처</title>
+    <meta name="description" content="해외 기술 글을 무료로 가져와 핵심 문장, 한국어 요점, 기술 용어와 한 줄 인사이트로 정리하는 리서치 데스크." />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="글로벌 테크 리서처" />
+    <meta property="og:description" content="해외 기술 글을 무료로 가져와 핵심 문장, 한국어 요점, 기술 용어와 한 줄 인사이트로 정리하는 리서치 데스크." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="글로벌 테크 리서처" />
+    <meta name="twitter:description" content="해외 기술 글을 무료로 가져와 핵심 문장, 한국어 요점, 기술 용어와 한 줄 인사이트로 정리하는 리서치 데스크." />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page" id="page" hidden>
+      <header class="bar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">GT</span>
+          <span class="brand-name">글로벌 테크 리서처</span>
+        </div>
+        <span class="bar-note">무료 · Jina Reader</span>
+      </header>
+
+      <main class="main">
+        <section class="hero">
+          <h1>영문 테크 아티클,<br /><span>3줄 요약으로.</span></h1>
+          <p>
+            링크나 영문 텍스트를 넣으면 핵심 3줄 요약과 IT·AI 용어 해설 카드를 만들어 드립니다.
+            결과는 버튼 한 번으로 노션에 붙여넣을 수 있습니다.
+          </p>
+        </section>
+
+        <form class="card composer" id="composer" aria-label="아티클 분석 입력">
+          <div class="segmented" role="group" aria-label="입력 형식 선택">
+            <button type="button" class="segment active" id="mode-url" aria-pressed="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+              URL
+            </button>
+            <button type="button" class="segment" id="mode-text" aria-pressed="false">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
+              텍스트
+            </button>
+          </div>
+
+          <label class="field-label" for="article-source" id="field-label">아티클 주소</label>
+          <textarea
+            id="article-source"
+            class="source-input"
+            placeholder="https://example.com/technology/article"
+            maxlength="200000"
+            required
+          ></textarea>
+
+          <div class="composer-foot">
+            <span class="hint" id="hint">0 / 200,000 · 원문 문장도 함께 남깁니다</span>
+            <button class="primary" type="submit" id="analyze-button" disabled>
+              요약 카드 만들기
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </button>
+          </div>
+        </form>
+
+        <section class="result" id="result" aria-live="polite">
+          <div class="empty" id="empty-state">
+            <p class="empty-title">아직 노트가 없습니다</p>
+            <p class="empty-copy">위에 아티클 주소를 넣고 <strong>요약 카드 만들기</strong>를 눌러 보세요.</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="foot">
+        <span>GLOBAL TECH RESEARCHER</span>
+        <span>Jina Reader · 로컬 규칙 기반</span>
+      </footer>
+    </div>
+
+    <main class="pin-screen" id="pin-screen" hidden>
+      <div class="pin-wrap">
+        <form class="pin-card" id="pin-form">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true">GT</span>
+            <span class="brand-name">글로벌 테크 리서처</span>
+          </div>
+          <h1 class="pin-title">리서치 데스크</h1>
+          <p class="pin-subtitle">PIN을 입력하면 노트가 열립니다.</p>
+          <input
+            class="pin-input"
+            id="pin-input"
+            aria-label="PIN"
+            autocomplete="off"
+            inputmode="numeric"
+            maxlength="4"
+            type="password"
+            placeholder="••••"
+          />
+          <div class="pin-error" id="pin-error" role="status"></div>
+          <button class="primary pin-enter" type="submit">데스크 열기</button>
+          <p class="pin-note">이 화면에서만 쓰는 로컬 잠금입니다.</p>
+        </form>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
